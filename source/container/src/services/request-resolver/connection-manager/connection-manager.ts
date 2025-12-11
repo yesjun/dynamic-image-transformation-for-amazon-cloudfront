@@ -15,7 +15,7 @@ export class ConnectionManager {
   private readonly s3Client = new S3Client(getOptions());
 
   private validateContentType(contentType: string | undefined): void {
-    if (!contentType?.split(';')[0].trim().startsWith('image/')) {
+    if (!contentType?.split(';')[0].trim().startsWith('image/') && !contentType?.split(';')[0].trim().startsWith('binary/octet-stream')) {
       throw new ConnectionError('Invalid content type', `Origin does not serve image content. Content-Type: ${contentType}`, 400, 'INVALID_FORMAT');
     }
   }

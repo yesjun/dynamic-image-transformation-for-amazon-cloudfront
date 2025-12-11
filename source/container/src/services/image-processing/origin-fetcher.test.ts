@@ -80,15 +80,20 @@ describe('OriginFetcher', () => {
       expect(() => fetcher['validateImageMagicNumbers'](jpegBuffer, 'image/jpeg')).not.toThrow();
     });
 
-    it('should reject content-type mismatch', () => {
+    it('should allow content-type mismatch', () => {
       const pngBuffer = Buffer.from([0x89, 0x50, 0x4E, 0x47]);
       expect(() => fetcher['validateImageMagicNumbers'](pngBuffer, 'image/jpeg'))
-        .toThrow('Content-Type image/jpeg does not match detected format png');
+        .not.toThrow('Content-Type image/jpeg does not match detected format png');
     });
 
     it('should allow unknown content-type with detected format', () => {
       const jpegBuffer = Buffer.from([0xFF, 0xD8, 0xFF, 0xE0]);
       expect(() => fetcher['validateImageMagicNumbers'](jpegBuffer, 'image/unknown')).not.toThrow();
+    });
+    
+    it('should allow binary/octet-stream content-type with detected format', () => {
+      const jpegBuffer = Buffer.from([0xFF, 0xD8, 0xFF, 0xE0]);
+      expect(() => fetcher['validateImageMagicNumbers'](jpegBuffer, 'binary/octet-stream')).not.toThrow();
     });
 
     it('should allow no content-type with detected format', () => {

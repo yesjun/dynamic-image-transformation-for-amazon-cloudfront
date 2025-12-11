@@ -7,6 +7,7 @@ import { ImageProcessingError } from './types';
 import { S3UrlHelper } from '../../utils/s3-url-helper';
 import { UrlValidator } from '../../utils/url-validator';
 import { S3ErrorHandler } from '../../utils/s3-error-handler';
+import { de } from 'zod/v4/locales';
 
 export class OriginFetcher {
   private s3Client: S3Client;
@@ -50,7 +51,8 @@ export class OriginFetcher {
       fetchDurationMs
     }));
     
-    const format = result.contentType?.replace('image/', '');
+    const detectedFormat = this.detectedFormat(result.buffer)
+    const format = detectedFormat ? detectedFormat : result.contentType?.replace('image/', '');
     return {
       buffer: result.buffer,
       metadata: {
@@ -123,7 +125,7 @@ export class OriginFetcher {
       }
 
       const contentType = response.headers.get('content-type');
-      if (contentType && !this.isValidImageContentType(contentType)) {
+      if (contentType && contentType.toLowerCase().trim() !== 'binary/octet-stream' && !this.isValidImageContentType(contentType)) {
         throw new ImageProcessingError(
           415,
           'InvalidContentType',
@@ -132,7 +134,16 @@ export class OriginFetcher {
       }
 
       const arrayBuffer = await response.arrayBuffer();
-      return { buffer: Buffer.from(arrayBuffer), contentType: contentType || undefined };
+      const buffer = Buffer.from(arrayBuffer);
+
+      const detectedFormat = this.detectedFormat(buffer);
+      if (contentType.toLowerCase().trim() === 'binary/octet-stream') {
+        if (!detectedFormat) {
+          throw new ImageProcessingError(415, 'InvalidImage', `Invalid or corrupted Content-Type ${contentType} file`);
+        }
+      }
+
+      return { buffer: buffer, contentType: contentType || undefined };
     } catch (error) {
       if (error.name === 'AbortError') {
         throw new ImageProcessingError(504, 'RequestTimeout', 'Origin Request timeout');
@@ -142,6 +153,33 @@ export class OriginFetcher {
   }
 
 
+
+    private detectedFormat(buffer: Buffer): string | undefined {
+    if (buffer.length < 4) {
+      throw new ImageProcessingError(415, 'InvalidImage', 'File too small to be a valid image');
+    }
+
+    const magicToFormat = {
+      'FFD8FF': 'jpeg',
+      '89504E47': 'png', 
+      '47494638': 'gif',
+      '52494646': 'webp',
+      '49492A00': 'tiff',
+      '4D4D002A': 'tiff'
+    };
+
+    const fileHeader = buffer.subarray(0, 4).toString('hex').toUpperCase();
+    let detectedFormat: string | undefined;
+    
+    for (const [magic, format] of Object.entries(magicToFormat)) {
+      if (fileHeader.startsWith(magic)) {
+        detectedFormat = format;
+        break;
+      }
+    }
+
+    return detectedFormat;
+  }
 
   private isValidImageContentType(contentType: string): boolean {
     const validTypes = [
@@ -200,9 +238,10 @@ export class OriginFetcher {
         if (!detectedFormat) {
           throw new ImageProcessingError(415, 'InvalidImage', `Invalid or corrupted ${expectedFormat} file`);
         }
-        if (expectedFormat !== detectedFormat) {
-          throw new ImageProcessingError(415, 'InvalidImage', `Content-Type ${contentType} does not match detected format ${detectedFormat}`);
-        }
+        // Allow mismatch
+        // if (expectedFormat !== detectedFormat) {
+        //   throw new ImageProcessingError(415, 'InvalidImage', `Content-Type ${contentType} does not match detected format ${detectedFormat}`);
+        // }
       }
     }
   }

@@ -1410,14 +1410,7 @@ async function handler(event) {
     },
     "NetworkVpcIsolatedSubnetSubnet1SubnetFC34B17D": {
       "Properties": {
-        "AvailabilityZone": {
-          "Fn::Select": [
-            0,
-            {
-              "Fn::GetAZs": "",
-            },
-          ],
-        },
+        "AvailabilityZone": "ap-northeast-2b",
         "CidrBlock": "10.0.0.128/26",
         "MapPublicIpOnLaunch": false,
         "Tags": [
@@ -1467,14 +1460,7 @@ async function handler(event) {
     },
     "NetworkVpcIsolatedSubnetSubnet2Subnet6D74919D": {
       "Properties": {
-        "AvailabilityZone": {
-          "Fn::Select": [
-            1,
-            {
-              "Fn::GetAZs": "",
-            },
-          ],
-        },
+        "AvailabilityZone": "ap-northeast-2c",
         "CidrBlock": "10.0.0.192/26",
         "MapPublicIpOnLaunch": false,
         "Tags": [
@@ -1546,14 +1532,7 @@ async function handler(event) {
         },
       },
       "Properties": {
-        "AvailabilityZone": {
-          "Fn::Select": [
-            0,
-            {
-              "Fn::GetAZs": "",
-            },
-          ],
-        },
+        "AvailabilityZone": "ap-northeast-2b",
         "CidrBlock": "10.0.0.0/26",
         "MapPublicIpOnLaunch": true,
         "Tags": [
@@ -1625,14 +1604,7 @@ async function handler(event) {
         },
       },
       "Properties": {
-        "AvailabilityZone": {
-          "Fn::Select": [
-            1,
-            {
-              "Fn::GetAZs": "",
-            },
-          ],
-        },
+        "AvailabilityZone": "ap-northeast-2c",
         "CidrBlock": "10.0.0.64/26",
         "MapPublicIpOnLaunch": true,
         "Tags": [

@@ -42,7 +42,7 @@ export class NetworkConstruct extends Construct {
 
     this.vpc = new ec2.Vpc(this, "Vpc", {
       ipAddresses: ec2.IpAddresses.cidr(props.vpcCidr),
-      maxAzs: 3,
+      availabilityZones: ['ap-northeast-2b', 'ap-northeast-2c'],
       subnetConfiguration: [
         {
           cidrMask: 26, // /26 gives 64 IPs per subnet (62 usable)
